@@ -1,0 +1,739 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Calculadora de Sistemas de Ecuaciones Lineales</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f0f0f0;
+            margin: 0;
+            padding: 0;
+        }
+
+        h1 {
+            text-align: center;
+            background-color: #007bff;
+            color: #fff;
+            padding: 20px;
+            margin: 0;
+        }
+
+        label {
+            margin-right: 10px;
+        }
+
+        select, input[type="number"] {
+            padding: 5px;
+            margin: 5px;
+        }
+
+        select, input[type="number"] {
+            width: 100px;
+        }
+
+        button {
+            padding: 10px 20px;
+            background-color: #007bff;
+            color: #fff;
+            border: none;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background-color: #0056b3;
+        }
+
+        #entradas {
+            margin: 10px;
+            padding: 10px;
+            border: 1px solid #ddd;
+            background-color: #fff;
+        }
+
+        #solucion {
+            margin: 10px;
+            padding: 10px;
+            border: 1px solid #ddd;
+            background-color: #fff;
+        }
+
+        #grafico {
+            margin: 10px;
+            padding: 10px;
+            border: 1px solid #ddd;
+            background-color: #fff;
+        }
+    </style>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        function resolverSistema() {
+            let n = parseInt(document.getElementById("dimension").value);
+            let metodo = document.getElementById("metodo").value;
+            let matrizCoeficientes = [];
+            let terminosIndependientes = [];
+
+            for (let i = 1; i <= n; i++) {
+                let fila = [];
+                for (let j = 1; j <= n; j++) {
+                    fila.push(parseFloat(document.getElementById("a" + i + j).value));
+                }
+                matrizCoeficientes.push(fila);
+                terminosIndependientes.push(parseFloat(document.getElementById("b" + i).value));
+            }
+
+            let solucion;
+            let procedimiento = '';
+
+            if (metodo === "gauss-jordan") {
+                [solucion, procedimiento] = resolverGaussJordan(matrizCoeficientes, terminosIndependientes);
+            } else if (metodo === "cramer") {
+                [solucion, procedimiento] = resolverCramer(matrizCoeficientes, terminosIndependientes, n);
+            }
+
+            let resultado = "Solución: " + solucion;
+            resultado += "<br>Procedimiento:<br>" + procedimiento;
+            document.getElementById("solucion").innerHTML = resultado;
+
+            graficarSistema(matrizCoeficientes, terminosIndependientes);
+        }
+   // Función original para sistemas 2x2
+   function resolverGaussJordan(matrizCoeficientes, terminosIndependientes) {
+    let n = matrizCoeficientes.length;
+    let procedimiento = '';
+
+    for (let k = 0; k < n; k++) {
+        procedimiento += `Paso ${k + 1}: <br>`;
+        procedimiento += mostrarMatriz(matrizCoeficientes, terminosIndependientes);
+
+        let pivot = matrizCoeficientes[k][k];
+        if (pivot === 0) {
+            let filaIntercambio = -1;
+            for (let i = k + 1; i < n; i++) {
+                if (matrizCoeficientes[i][k] !== 0) {
+                    filaIntercambio = i;
+                    break;
+                }
+            }
+
+            if (filaIntercambio === -1) {
+                let tieneSolucion = terminosIndependientes.slice(k).every(val => val === 0);
+                return tieneSolucion ? ["Soluciones infinitas", procedimiento] : ["No hay solución", procedimiento];
+            }
+
+            [matrizCoeficientes[k], matrizCoeficientes[filaIntercambio]] = [matrizCoeficientes[filaIntercambio], matrizCoeficientes[k]];
+            [terminosIndependientes[k], terminosIndependientes[filaIntercambio]] = [terminosIndependientes[filaIntercambio], terminosIndependientes[k]];
+
+            procedimiento += `Intercambiar fila ${k + 1} con fila ${filaIntercambio + 1}<br>`;
+            pivot = matrizCoeficientes[k][k];
+        }
+
+        procedimiento += `Dividir la fila ${k + 1} por ${pivot}<br>`;
+        for (let j = 0; j < n; j++) {
+            matrizCoeficientes[k][j] /= pivot;
+        }
+        terminosIndependientes[k] /= pivot;
+
+        procedimiento += mostrarOperacion(matrizCoeficientes, terminosIndependientes, k);
+
+        for (let i = 0; i < n; i++) {
+            if (i !== k) {
+                let factor = matrizCoeficientes[i][k];
+                procedimiento += `Restar ${factor} veces la fila ${k + 1} de la fila ${i + 1}<br>`;
+                for (let j = 0; j < n; j++) {
+                    matrizCoeficientes[i][j] -= factor * matrizCoeficientes[k][j];
+                }
+                terminosIndependientes[i] -= factor * terminosIndependientes[k];
+            }
+        }
+    }
+
+    procedimiento += `Paso ${n + 1}: <br>`;
+    procedimiento += mostrarMatriz(matrizCoeficientes, terminosIndependientes);
+
+    if (terminosIndependientes.slice(n).some(val => val !== 0)) {
+        return ["Soluciones infinitas", procedimiento];
+    } else {
+        let x = terminosIndependientes[0].toFixed(2);
+        let y = terminosIndependientes[1].toFixed(2);
+        return [`Solución única: x = ${x}, y = ${y}`, procedimiento];
+    }
+}
+
+function resolverGaussJordan3x3(matrizCoeficientes, terminosIndependientes) {
+    let n = matrizCoeficientes.length;
+    let procedimiento = '';
+
+    for (let k = 0; k < n; k++) {
+        procedimiento += `Paso ${k + 1}: <br>`;
+        procedimiento += mostrarMatriz(matrizCoeficientes, terminosIndependientes);
+
+        let pivot = matrizCoeficientes[k][k];
+        procedimiento += `Dividir la fila ${k + 1} por ${pivot}<br>`;
+        for (let j = 0; j < n; j++) {
+            matrizCoeficientes[k][j] /= pivot;
+        }
+        terminosIndependientes[k] /= pivot;
+
+        procedimiento += mostrarOperacion(matrizCoeficientes, terminosIndependientes, k);
+
+        for (let i = 0; i < n; i++) {
+            if (i !== k) {
+                let factor = matrizCoeficientes[i][k];
+                procedimiento += `Restar ${factor} veces la fila ${k + 1} de la fila ${i + 1}<br>`;
+                for (let j = 0; j < n; j++) {
+                    matrizCoeficientes[i][j] -= factor * matrizCoeficientes[k][j];
+                }
+                terminosIndependientes[i] -= factor * terminosIndependientes[k];
+            }
+        }
+    }
+
+    procedimiento += `Paso ${n + 1}: <br>`;
+    procedimiento += mostrarMatriz(matrizCoeficientes, terminosIndependientes);
+
+    // Verificar si hay soluciones infinitas
+    if (terminosIndependientes.slice(n).some(val => val !== 0)) {
+        // Si hay valores no numéricos o infinitos, hay soluciones infinitas
+        return ["Soluciones infinitas", procedimiento];
+    } else {
+        // Verificar si hay una fila de ceros después del pivote
+        for (let i = 0; i < n; i++) {
+            if (matrizCoeficientes[i][i] === 0 && terminosIndependientes[i] !== 0) {
+                // Hay una fila de ceros después del pivote, hay soluciones infinitas
+                return ["Soluciones infinitas", procedimiento];
+            }
+        }
+
+        // Si no se cumple ninguna condición anterior, hay solución única
+        return ["Solución única", procedimiento];
+    }
+}
+
+        function mostrarMatriz(matrizCoeficientes, terminosIndependientes) {
+            let n = matrizCoeficientes.length;
+            let str = '<table border="1">';
+            for (let i = 0; i < n; i++) {
+                str += '<tr>';
+                for (let j = 0; j < n; j++) {
+                    str += `<td>${Math.round(matrizCoeficientes[i][j])}</td>`;
+                }
+                str += `<td>${Math.round(terminosIndependientes[i])}</td>`;
+                str += '</tr>';
+            }
+            str += '</table><br>';
+            return str;
+        }
+
+        function mostrarOperacion(matrizCoeficientes, terminosIndependientes, k) {
+            let n = matrizCoeficientes.length;
+            let str = `Operación: Fila ${k + 1} = Fila ${k + 1} / ${Math.round(matrizCoeficientes[k][k])}<br>`;
+            str += mostrarMatriz(matrizCoeficientes, terminosIndependientes);
+            return str;
+        }
+
+        function resolverCramer(matrizCoeficientes, terminosIndependientes, n) {
+    let procedimiento = '';
+
+    let D = calcularDeterminante(matrizCoeficientes);
+
+    if (D === 0) {
+        let proporcionales = true;
+        for (let i = 1; i < n; i++) {
+            if (matrizCoeficientes[i][0] !== 0) {
+                proporcionales = false;
+                break;
+            }
+        }
+    
+if (n === 3) {
+        if (proporcionales) {
+    procedimiento += "Sin solución<br>";
+
+    // Encuentra una variable libre
+    let variableLibre;
+    for (let i = 0; i < n; i++) {
+        if (matrizCoeficientes[i].every(val => val === 0)) {
+            variableLibre = String.fromCharCode('A'.charCodeAt(0) + i);
+            break;
+        }
+    }
+
+    procedimiento += `El sistema no tiene solución. Expresa las variables en función de ${variableLibre}:<br>`;
+    
+    // Agrega los pasos específicos para expresar las variables en función de la variable libre
+    for (let i = 0; i < n; i++) {
+        let coeficientes = matrizCoeficientes[i];
+        let ecuacion = `(${String.fromCharCode('x'.charCodeAt(0) + i)}) = `;
+
+        for (let j = 0; j < n; j++) {
+            if (j !== i) {
+                if (coeficientes[i] !== 0) {
+                    ecuacion += ` + (${String.fromCharCode('x'.charCodeAt(0) + j)}) * (${coeficientes[j]} / ${-coeficientes[i]})`;
+                } else {
+                    ecuacion += ` + (${String.fromCharCode('x'.charCodeAt(0) + j)}) * (0)`;
+                }
+            }
+        }
+
+        procedimiento += ecuacion + "<br>";
+    }
+
+    return [procedimiento];
+}
+        if (n === 3) {
+        if (proporcionales) {
+            let procedimiento = "Solución: Soluciones infinitas<br>";
+
+            // Encuentra variables libres
+            let variablesLibres = [];
+            for (let i = 0; i < n; i++) {
+                if (matrizCoeficientes[i].every(val => val === 0)) {
+                    variablesLibres.push(String.fromCharCode('A'.charCodeAt(0) + i));
+                }
+            }
+
+            procedimiento += `El sistema tiene soluciones infinitas. Expresa las variables en función de ${variablesLibres.join(", ")}:<br>`;
+
+            // Agrega los pasos para expresar las variables en función de las variables libres
+            for (let i = 0; i < n; i++) {
+                let coeficientes = matrizCoeficientes[i];
+                let ecuacion = `(${String.fromCharCode('x'.charCodeAt(0) + i)}) = `;
+
+                for (let j = 0; j < n; j++) {
+                    if (j !== i) {
+                        if (coeficientes[i] !== 0) {
+                            ecuacion += ` + (${String.fromCharCode('x'.charCodeAt(0) + j)}) * (${coeficientes[j]} / ${-coeficientes[i]})`;
+                        } else {
+                            ecuacion += ` + (${String.fromCharCode('x'.charCodeAt(0) + j)}) * (0)`;
+                        }
+                    }
+                }
+
+                procedimiento += ecuacion + "<br>";
+            }
+
+            return [procedimiento];
+        }
+    }
+  
+    }  
+        if (n === 3) {
+    let procedimientoUnica = "Solución: Solución única<br>";
+
+    // Itera sobre cada variable
+    for (let i = 0; i < n; i++) {
+        // Crea una copia de la matriz de coeficientes para trabajar con ella
+        let matrizTemporal = JSON.parse(JSON.stringify(matrizCoeficientes));
+
+        // Reemplaza la columna correspondiente con los términos independientes
+        for (let j = 0; j < n; j++) {
+            matrizTemporal[j][i] = terminosIndependientes[j];
+        }
+
+        procedimientoUnica += `Calcular ${String.fromCharCode('x'.charCodeAt(0) + i)}:<br>`;
+        procedimientoUnica += `Crear una matriz con la columna ${String.fromCharCode('A'.charCodeAt(0) + i)} reemplazada por los términos independientes:<br>`;
+        procedimientoUnica += mostrarMatriz(matrizTemporal, terminosIndependientes);
+
+        let D_temporal = calcularDeterminante(matrizTemporal);
+
+        procedimientoUnica += `Calcular el determinante de esta matriz (D${String.fromCharCode('x'.charCodeAt(0) + i)}):<br>`;
+        procedimientoUnica += `D${String.fromCharCode('x'.charCodeAt(0) + i)} = ${D_temporal}<br>`;
+
+        procedimientoUnica += `(${String.fromCharCode('x'.charCodeAt(0) + i)}) = D${String.fromCharCode('x'.charCodeAt(0) + i)} / D<br>`;
+        procedimientoUnica += `(${String.fromCharCode('x'.charCodeAt(0) + i)}) = ${D_temporal} / ${D}<br>`;
+
+        let solucion = D_temporal / D;
+        soluciones.push(solucion);
+    }
+
+    return [procedimientoUnica, soluciones];
+}
+
+if (n === 4) {
+    if (proporcionales) {
+            procedimiento += "Sin solución<br>";
+
+            // Encuentra una variable libre
+            let variableLibre;
+            for (let i = 0; i < 4; i++) {
+                if (matrizCoeficientes[i].every(val => val === 0)) {
+                    variableLibre = String.fromCharCode('A'.charCodeAt(0) + i);
+                    break;
+                }
+            }
+
+            procedimiento += `El sistema no tiene solución. Expresa las variables en función de ${variableLibre}:<br>`;
+
+            // Agrega los pasos específicos para expresar las variables en función de la variable libre
+            for (let i = 0; i < 4; i++) {
+                let coeficientes = matrizCoeficientes[i];
+                let ecuacion = `(${String.fromCharCode('x'.charCodeAt(0) + i)}) = `;
+
+                for (let j = 0; j < 4; j++) {
+                    if (j !== i) {
+                        if (coeficientes[i] !== 0) {
+                            ecuacion += ` + (${String.fromCharCode('x'.charCodeAt(0) + j)}) * (${coeficientes[j]} / ${-coeficientes[i]})`;
+                        } else {
+                            ecuacion += ` + (${String.fromCharCode('x'.charCodeAt(0) + j)}) * (0)`;
+                        }
+                    }
+                }
+
+                procedimiento += ecuacion + "<br>";
+            }
+
+            return [procedimiento];
+        }
+    
+
+        if (n === 4) {
+        if (proporcionales) {
+            let procedimiento = "Solución: Soluciones infinitas<br>";
+
+            // Encuentra variables libres
+            let variablesLibres = [];
+            for (let i = 0; i < n; i++) {
+                if (matrizCoeficientes[i].every(val => val === 0)) {
+                    variablesLibres.push(String.fromCharCode('A'.charCodeAt(0) + i));
+                }
+            }
+
+            procedimiento += `El sistema tiene soluciones infinitas. Expresa las variables en función de ${variablesLibres.join(", ")}:<br>`;
+
+            // Agrega los pasos para expresar las variables en función de las variables libres
+            for (let i = 0; i < n; i++) {
+                let coeficientes = matrizCoeficientes[i];
+                let ecuacion = `(${String.fromCharCode('x'.charCodeAt(0) + i)}) = `;
+
+                for (let j = 0; j < n; j++) {
+                    if (j !== i) {
+                        if (coeficientes[i] !== 0) {
+                            ecuacion += ` + (${String.fromCharCode('x'.charCodeAt(0) + j)}) * (${coeficientes[j]} / ${-coeficientes[i]})`;
+                        } else {
+                            ecuacion += ` + (${String.fromCharCode('x'.charCodeAt(0) + j)}) * (0)`;
+                        }
+                    }
+                }
+
+                procedimiento += ecuacion + "<br>";
+            }
+
+            return [procedimiento];
+        }
+    }
+  
+    }  
+        if (n === 4) {
+    let procedimientoUnica = "Solución: Solución única<br>";
+
+    // Itera sobre cada variable
+    for (let i = 0; i < n; i++) {
+        // Crea una copia de la matriz de coeficientes para trabajar con ella
+        let matrizTemporal = JSON.parse(JSON.stringify(matrizCoeficientes));
+
+        // Reemplaza la columna correspondiente con los términos independientes
+        for (let j = 0; j < n; j++) {
+            matrizTemporal[j][i] = terminosIndependientes[j];
+        }
+
+        procedimientoUnica += `Calcular ${String.fromCharCode('x'.charCodeAt(0) + i)}:<br>`;
+        procedimientoUnica += `Crear una matriz con la columna ${String.fromCharCode('A'.charCodeAt(0) + i)} reemplazada por los términos independientes:<br>`;
+        procedimientoUnica += mostrarMatriz(matrizTemporal, terminosIndependientes);
+
+        let D_temporal = calcularDeterminante(matrizTemporal);
+
+        procedimientoUnica += `Calcular el determinante de esta matriz (D${String.fromCharCode('x'.charCodeAt(0) + i)}):<br>`;
+        procedimientoUnica += `D${String.fromCharCode('x'.charCodeAt(0) + i)} = ${D_temporal}<br>`;
+
+        procedimientoUnica += `(${String.fromCharCode('x'.charCodeAt(0) + i)}) = D${String.fromCharCode('x'.charCodeAt(0) + i)} / D<br>`;
+        procedimientoUnica += `(${String.fromCharCode('x'.charCodeAt(0) + i)}) = ${D_temporal} / ${D}<br>`;
+
+        let solucion = D_temporal / D;
+        soluciones.push(solucion);
+    }
+
+    return [procedimientoUnica, soluciones];
+}
+        if (proporcionales) {
+    procedimiento += "Sin solución<br>";
+
+    // Encuentra una variable libre
+    let variableLibre;
+    for (let i = 0; i < n; i++) {
+        if (matrizCoeficientes[i].every(val => val === 0)) {
+            variableLibre = String.fromCharCode('A'.charCodeAt(0) + i);
+            break;
+        }
+    }
+
+    procedimiento += `El sistema no tiene solución. Expresa las variables en función de ${variableLibre}:<br>`;
+    
+    // Agrega los pasos específicos para expresar las variables en función de la variable libre
+    for (let i = 0; i < n; i++) {
+        let coeficientes = matrizCoeficientes[i];
+        let ecuacion = `(${String.fromCharCode('x'.charCodeAt(0) + i)}) = `;
+
+        for (let j = 0; j < n; j++) {
+            if (j !== i) {
+                if (coeficientes[i] !== 0) {
+                    ecuacion += ` + (${String.fromCharCode('x'.charCodeAt(0) + j)}) * (${coeficientes[j]} / ${-coeficientes[i]})`;
+                } else {
+                    ecuacion += ` + (${String.fromCharCode('x'.charCodeAt(0) + j)}) * (0)`;
+                }
+            }
+        }
+
+        procedimiento += ecuacion + "<br>";
+    }
+
+    return [procedimiento];
+}
+
+        if (proporcionales) {
+    procedimiento += " Soluciones infinitas<br>";
+
+    // Encuentra una variable libre
+    let variableLibre;
+    for (let i = 0; i < n; i++) {
+        if (matrizCoeficientes[i].every(val => val === 0)) {
+            variableLibre = String.fromCharCode('A'.charCodeAt(0) + i);
+            break;
+        }
+    }
+
+    procedimiento += `El sistema tiene soluciones infinitas. Expresa las variables en función de ${variableLibre}:<br>`;
+
+    // Agrega los pasos para expresar las variables en función de la variable libre
+    for (let i = 0; i < n; i++) {
+        let coeficientes = matrizCoeficientes[i];
+        let ecuacion = `(${String.fromCharCode('x'.charCodeAt(0) + i)}) = `;
+
+        for (let j = 0; j < n; j++) {
+            if (j !== i) {
+                if (coeficientes[i] !== 0) {
+                    ecuacion += ` + (${String.fromCharCode('x'.charCodeAt(0) + j)}) * (${coeficientes[j]} / ${-coeficientes[i]})`;
+                } else {
+                    ecuacion += ` + (${String.fromCharCode('x'.charCodeAt(0) + j)}) * (0)`;
+                }
+            }
+        }
+
+        procedimiento += ecuacion + "<br>";
+    }
+
+    // Agrega los pasos para expresar y en función de la variable libre
+    for (let i = 0; i < n; i++) {
+        if (i !== 1) {
+            // Esto es para la variable y (debes ajustarlo según tu lógica específica)
+            let coeficientesY = matrizCoeficientes[i];
+            let ecuacionY = `(${String.fromCharCode('y'.charCodeAt(0) + i)}) = `;
+
+            for (let j = 0; j < n; j++) {
+                if (j !== i) {
+                    if (coeficientesY[i] !== 0) {
+                        ecuacionY += ` + (${String.fromCharCode('x'.charCodeAt(0) + j)}) * (${coeficientesY[j]} / ${-coeficientesY[i]})`;
+                    } else {
+                        ecuacionY += ` + (${String.fromCharCode('x'.charCodeAt(0) + j)}) * (0)`;
+                    }
+                }
+            }
+
+            procedimiento += ecuacionY + "<br>";
+        }
+    }
+
+    return [procedimiento];
+}
+
+}
+    let soluciones = [];
+    for (let i = 0; i < n; i++) {
+        procedimiento += `Calcular ${String.fromCharCode('x'.charCodeAt(0) + i)}:<br>`;
+        let matrizTemporal = copiarMatriz(matrizCoeficientes);
+        for (let j = 0; j < n; j++) {
+            matrizTemporal[j][i] = terminosIndependientes[j];
+        }
+
+        let D_temporal = calcularDeterminante(matrizTemporal);
+
+        procedimiento += `(${String.fromCharCode('x'.charCodeAt(0) + i)}) = D${String.fromCharCode('x'.charCodeAt(0) + i)} / D<br>`;
+        procedimiento += `(${String.fromCharCode('x'.charCodeAt(0) + i)}) = ${D_temporal} / ${D}<br>`;
+
+        let solucion = D_temporal / D;
+        soluciones.push(solucion);
+
+        procedimiento += `(${String.fromCharCode('x'.charCodeAt(0) + i)}) = ${solucion}<br><br>`;
+    }
+
+    return ["Solución única", procedimiento, soluciones];
+}
+
+        function calcularDeterminante(matriz) {
+            let n = matriz.length;
+            let det = 1;
+
+            for (let i = 0; i < n; i++) {
+                let pivot = matriz[i][i];
+                if (pivot === 0) {
+                    return 0;
+                }
+                det *= pivot;
+
+                for (let j = i + 1; j < n; j++) {
+                    let factor = matriz[j][i] / pivot;
+                    for (let k = i; k < n; k++) {
+                        matriz[j][k] -= factor * matriz[i][k];
+                    }
+                }
+            }
+
+            return det;
+        }
+
+        function copiarMatriz(matriz) {
+            return matriz.map(fila => fila.slice());
+        }
+
+        function graficarSistema(matrizCoeficientes, terminosIndependientes) {
+            let n = matrizCoeficientes.length;
+            let colores = ['red', 'blue', 'green', 'purple'];
+
+            let ctx = document.getElementById('grafico').getContext('2d');
+            let myChart = new Chart(ctx, {
+                type: 'scatter',
+                data: {
+                    datasets: []
+                },
+                options: {
+                    scales: {
+                        x: {
+                            type: 'linear',
+                            position: 'bottom'
+                        },
+                        y: {
+                            type: 'linear',
+                            position: 'left'
+                        }
+                    }
+                }
+            });
+
+            for (let i = 0; i < n; i++) {
+                let datos = [];
+                for (let x = -10; x <= 10; x += 0.1) {
+                    let y = 0;
+                    for (let j = 0; j < n; j++) {
+                        y += matrizCoeficientes[i][j] * Math.pow(x, j);
+                    }
+                    datos.push({ x: x, y: y });
+                }
+
+                myChart.data.datasets.push({
+                    label: `Ecuación ${i + 1}`,
+                    data: datos,
+                    borderColor: colores[i],
+                    borderWidth: 1,
+                    fill: false
+                });
+            }
+
+            let solucionDatos = [];
+            for (let x = -10; x <= 10; x += 0.1) {
+                let y = 0;
+                for (let i = 0; i < n; i++) {
+                    y += terminosIndependientes[i] * Math.pow(x, i);
+                }
+                solucionDatos.push({ x: x, y: y });
+            }
+
+            myChart.data.datasets.push({
+                label: 'Solución',
+                data: solucionDatos,
+                borderColor: 'black',
+                borderWidth: 2,
+                fill: false
+            });
+
+            myChart.update();
+        }
+        function generarEntradas() {
+            let n = parseInt(document.getElementById("dimension").value);
+            let entradasDiv = document.getElementById("entradas");
+            entradasDiv.innerHTML = "";
+
+            for (let i = 1; i <= n; i++) {
+                for (let j = 1; j <= n; j++) {
+                    let input = document.createElement("input");
+                    input.type = "number";
+                    input.id = "a" + i + j;
+                    input.placeholder = "a" + i + j;
+                    entradasDiv.appendChild(input);
+                }
+                let igual = document.createTextNode("=");
+                entradasDiv.appendChild(igual);
+                let bInput = document.createElement("input");
+                bInput.type = "number";
+                bInput.id = "b" + i;
+                bInput.placeholder = "b" + i;
+                entradasDiv.appendChild(bInput);
+                let saltoDeLinea = document.createElement("br");
+                entradasDiv.appendChild(saltoDeLinea);
+            }
+        }
+        generarEntradas();
+    </script>
+</head>
+<body>
+    <h1>Calculadora de Sistemas de Ecuaciones Lineales</h1>
+
+    <label for="dimension">Dimensión del sistema:</label>
+    <select id="dimension" onchange="generarEntradas()">
+        <option value="2">2x2</option>
+        <option value="3">3x3</option>
+        <option value="4">4x4</option>
+    </select>
+
+    <label for="metodo">Método:</label>
+    <select id="metodo">
+        <option value="gauss-jordan">Gauss-Jordan</option>
+        <option value="cramer">Regla de Cramer</option>
+    </select>
+
+    <div id="entradas"></div>
+
+    <button onclick="resolverSistema()">Resolver</button>
+
+    <div id="solucion"></div>
+
+    <canvas id="grafico" width="400" height="400"></canvas>
+    <script>
+        function generarEntradas() {
+            let n = parseInt(document.getElementById("dimension").value);
+            let entradasDiv = document.getElementById("entradas");
+            entradasDiv.innerHTML = "";
+
+            for (let i = 1; i <= n; i++) {
+                for (let j = 1; j <= n; j++) {
+                    let input = document.createElement("input");
+                    input.type = "number";
+                    input.id = "a" + i + j;
+                    input.placeholder = "a" + i + j;
+                    entradasDiv.appendChild(input);
+                }
+                let igual = document.createTextNode("=");
+                entradasDiv.appendChild(igual);
+                let bInput = document.createElement("input");
+                bInput.type = "number";
+                bInput.id = "b" + i;
+                bInput.placeholder = "b" + i;
+                entradasDiv.appendChild(bInput);
+                let saltoDeLinea = document.createElement("br");
+                entradasDiv.appendChild(saltoDeLinea);
+            }
+        }
+        generarEntradas();
+    </script>
+</body>
+</html>

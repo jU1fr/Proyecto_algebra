@@ -1,0 +1,77 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    background-image: linear-gradient(rgba(0, 0, 0, 0.01), rgba(0, 0, 0, 0.63)), url('doom-logo-sketch-upscaled.jpg.7d8d7684b1b4c940af2af32f0387a1d4.jpg');
+    background-position: center;
+    background-size: cover;
+    background-repeat: no-repeat;
+    min-height: 100vh;
+    font-family: Arial, sans-serif;
+    color: white;
+}
+
+.page-container {
+    max-width: 100%;
+    padding: 3%;
+    margin: 0;
+    background-image: url('doom-logo-sketch-upscaled.jpg.7d8d7684b1b4c940af2af32f0387a1d4.jpg');
+    background-size: cover;
+    background-position: center;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    min-height: 100vh;
+}
+
+header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: url('doom-logo-sketch-upscaled.jpg.7d8d7684b1b4c940af2af32f0387a1d4.jpg') center/cover no-repeat;
+    padding: 20px;
+    width: 100%;
+}
+
+.logo {
+    font-size: 45px;
+    font-style: italic;
+    font-weight: bold;
+}
+
+nav {
+    list-style: none;
+}
+
+nav ul {
+    list-style: none;
+}
+
+nav li {
+    display: inline-block;
+    margin: 0 10px;
+}
+
+nav a {
+    padding: 10px 20px;
+    text-decoration: none;
+    font-size: 19px;
+    color: white;
+    background-color: transparent;
+    border-radius: 30px;
+    transition: 0.6s;
+}
+
+nav a:hover {
+    background-color: rgba(0, 123, 255, 0.7);
+}
+
+/* Style for images */
+img {
+    width: 100%;
+    height: auto;
+}

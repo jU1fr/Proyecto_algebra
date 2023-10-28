@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Calculadora de Inversa de Matriz 2x2</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            margin: 50px;
+        }
+    </style>
+</head>
+<body>
+
+    <h2>Calculadora de Inversa de Matriz 2x2</h2>
+
+    <label for="matrix">Ingrese los elementos de la matriz A (separados por comas):</label><br>
+    <input type="text" id="matrix" placeholder="a, b, c, d"><br><br>
+
+    <button onclick="calcularInversa()">Calcular Inversa</button><br><br>
+
+    <p id="resultado"></p>
+    <a href="index.html">inicio</a>
+
+    <script>
+        function calcularInversa() {
+            const inputMatrix = document.getElementById("matrix").value.split(',').map(Number);
+
+            if (inputMatrix.length !== 4) {
+                alert("Por favor, ingrese 4 elementos para la matriz 2x2.");
+                return;
+            }
+
+            const matrix = [
+                [inputMatrix[0], inputMatrix[1]],
+                [inputMatrix[2], inputMatrix[3]]
+            ];
+
+            const det = matrix[0][0] * matrix[1][1] - matrix[0][1] * matrix[1][0];
+
+            if (det === 0) {
+                alert("La matriz no es invertible (el determinante es cero).");
+                return;
+            }
+
+            function formatFraction(numerator, denominator) {
+                // Función para formatear números como fracciones
+                if (denominator === 1) {
+                    return numerator.toString();
+                }
+                return numerator + '/' + denominator;
+            }
+
+            const inverseMatrix = [
+                [formatFraction(matrix[1][1], det), formatFraction(-matrix[0][1], det)],
+                [formatFraction(-matrix[1][0], det), formatFraction(matrix[0][0], det)]
+            ];
+
+            document.getElementById("resultado").innerHTML =
+                "<strong>Matriz A:</strong> [[" + matrix[0].join(', ') + "], [" + matrix[1].join(', ') + "]]<br>" +
+                "<strong>Matriz Inversa (A<sup>-1</sup>):</strong> [[" + inverseMatrix[0].join(', ') + "], [" + inverseMatrix[1].join(', ') + "]]";
+        }
+    </script>
+</body>
+</html>
+

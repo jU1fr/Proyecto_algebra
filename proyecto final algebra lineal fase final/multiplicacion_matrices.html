@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Calculadora de Matrices</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            margin: 50px;
+        }
+    </style>
+</head>
+<body>
+
+    <h2>Calculadora de Matrices 2x2</h2>
+
+    <form id="matrixForm">
+        <label>Matriz A:</label><br>
+        <input type="text" name="a11" placeholder="a11" required>
+        <input type="text" name="a12" placeholder="a12" required><br>
+        <input type="text" name="a21" placeholder="a21" required>
+        <input type="text" name="a22" placeholder="a22" required><br><br>
+
+        <label>Matriz B:</label><br>
+        <input type="text" name="b11" placeholder="b11" required>
+        <input type="text" name="b12" placeholder="b12" required><br>
+        <input type="text" name="b21" placeholder="b21" required>
+        <input type="text" name="b22" placeholder="b22" required><br><br>
+
+        <button type="button" onclick="multiplyMatrices()">Multiplicar</button>
+    </form>
+
+    <h3>Pasos:</h3>
+    <ol id="steps"></ol>
+
+    <h3>Resultado:</h3>
+    <p id="result"></p>
+    <a href="index.html">Inicio</a>
+
+    <script>
+        function multiplyMatrices() {
+            var form = document.getElementById("matrixForm");
+            var a11 = parseFloat(form.a11.value);
+            var a12 = parseFloat(form.a12.value);
+            var a21 = parseFloat(form.a21.value);
+            var a22 = parseFloat(form.a22.value);
+
+            var b11 = parseFloat(form.b11.value);
+            var b12 = parseFloat(form.b12.value);
+            var b21 = parseFloat(form.b21.value);
+            var b22 = parseFloat(form.b22.value);
+
+            var result = document.getElementById("result");
+            var stepsList = document.getElementById("steps");
+            stepsList.innerHTML = ''; // Limpiar la lista de pasos anteriores
+
+            // Paso 1
+            var step1 = document.createElement("li");
+            step1.textContent = "Paso 1: Multiplicación de a11 * b11 = " + (a11 * b11) + ", a12 * b21 = " + (a12 * b21);
+            stepsList.appendChild(step1);
+
+            var m1 = a11 * b11;
+            var m2 = a12 * b21;
+
+            // Paso 2
+            var step2 = document.createElement("li");
+            step2.textContent = "Paso 2: Multiplicación de a11 * b12 = " + (a11 * b12) + ", a12 * b22 = " + (a12 * b22);
+            stepsList.appendChild(step2);
+
+            var m3 = a11 * b12;
+            var m4 = a12 * b22;
+
+            // Paso 3
+            var step3 = document.createElement("li");
+            step3.textContent = "Paso 3: Multiplicación de a21 * b11 = " + (a21 * b11) + ", a22 * b21 = " + (a22 * b21);
+            stepsList.appendChild(step3);
+
+            var m5 = a21 * b11;
+            var m6 = a22 * b21;
+
+            // Paso 4
+            var step4 = document.createElement("li");
+            step4.textContent = "Paso 4: Multiplicación de a21 * b12 = " + (a21 * b12) + ", a22 * b22 = " + (a22 * b22);
+            stepsList.appendChild(step4);
+
+            var m7 = a21 * b12;
+            var m8 = a22 * b22;
+
+            // Paso 5
+            var step5 = document.createElement("li");
+            step5.textContent = "Paso 5: Suma de los productos parciales = " + (m1 + m2 + m3 + m4) + ", " + (m5 + m6 + m7 + m8);
+            stepsList.appendChild(step5);
+
+            // Resultado
+            result.innerHTML = "[" + (m1 + m2) + ", " + (m3 + m4) + "]<br>[" + (m5 + m6) + ", " + (m7 + m8) + "]";
+        }
+    </script>
+</body>
+</html>
+
